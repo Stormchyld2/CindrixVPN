@@ -3,14 +3,24 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>CindrixVPN</AssemblyName>
     <RootNamespace>CindrixVPN.Client</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\cindrixvpn.ico</ApplicationIcon>
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\CindrixVPN.Core\CindrixVPN.Core.csproj" />
     <ProjectReference Include="..\CindrixVPN.TunnelService\CindrixVPN.TunnelService.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets\cindrixvpn.ico" />
+    <Resource Include="Assets\cindrixvpn-off.ico" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\native\x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
