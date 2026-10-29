@@ -122,13 +122,13 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
                 <GradientStop Offset="1" Color="{StaticResource GradientUpsellBackgroundEndColor}" />
             </LinearGradientBrush>
             <LinearGradientBrush x:Key="GradientVpnPlanBorderBrushColor" StartPoint="0,0" EndPoint="1,0">
-                <GradientStop Color="#6E4BFF" Offset="1" />
-                <GradientStop Color="#547AEC" Offset="1" />
-                <GradientStop Color="#2FCCCf" Offset="1" />
+                <GradientStop Color="#1F78E0" Offset="1" />
+                <GradientStop Color="#2F8CEB" Offset="1" />
+                <GradientStop Color="#5CC0FF" Offset="1" />
             </LinearGradientBrush>
             <LinearGradientBrush x:Key="GradientProtonPlanBorderBrushColor" StartPoint="0,0" EndPoint="1,0">
-                <GradientStop Color="#547AEC" Offset="0" />
-                <GradientStop Color="#A95DF4" Offset="1" />
+                <GradientStop Color="#2F8CEB" Offset="0" />
+                <GradientStop Color="#3DA5FF" Offset="1" />
             </LinearGradientBrush>
             <LinearGradientBrush x:Key="GradientDownloadSpeedChartColorBrush" StartPoint="0,0" EndPoint="0,1">
                 <GradientStop Offset="0" Color="{StaticResource SignalSuccessColor}" />
@@ -303,13 +303,13 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
                 <GradientStop Offset="1" Color="{StaticResource GradientUpsellBackgroundEndColor}" />
             </LinearGradientBrush>
             <LinearGradientBrush x:Key="GradientVpnPlanBorderBrushColor" StartPoint="0,0" EndPoint="1,0">
-                <GradientStop Color="#6E4BFF" Offset="0" />
-                <GradientStop Color="#547AEC" Offset="0.5" />
-                <GradientStop Color="#2FCCCf" Offset="1" />
+                <GradientStop Color="#1F78E0" Offset="0" />
+                <GradientStop Color="#2F8CEB" Offset="0.5" />
+                <GradientStop Color="#5CC0FF" Offset="1" />
             </LinearGradientBrush>
             <LinearGradientBrush x:Key="GradientProtonPlanBorderBrushColor" StartPoint="0,0" EndPoint="1,0">
-                <GradientStop Color="#547AEC" Offset="0" />
-                <GradientStop Color="#A95DF4" Offset="1" />
+                <GradientStop Color="#2F8CEB" Offset="0" />
+                <GradientStop Color="#3DA5FF" Offset="1" />
             </LinearGradientBrush>
             <LinearGradientBrush x:Key="GradientDownloadSpeedChartColorBrush" StartPoint="0,0" EndPoint="0,1">
                 <GradientStop Offset="0" Color="{StaticResource GradientDownloadSpeedChartStartColor}" />

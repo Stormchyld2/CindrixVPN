@@ -26,13 +26,13 @@ along with ProtonVPN.  If not, see <https://www.gnu.org/licenses/>.
 
     <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-            <SolidColorBrush x:Key="FlagOutlineColorBrush" Color="#200C0C14" />
-            <SolidColorBrush x:Key="FlagShadowColorBrush" Color="#660C0C14" />
+            <SolidColorBrush x:Key="FlagOutlineColorBrush" Color="#200E1317" />
+            <SolidColorBrush x:Key="FlagShadowColorBrush" Color="#660E1317" />
             <StaticResource x:Key="FlagSecureCoreOutlineColorBrush" ResourceKey="BorderNormColorBrush" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <SolidColorBrush x:Key="FlagOutlineColorBrush" Color="#0DFFFFFF" />
-            <SolidColorBrush x:Key="FlagShadowColorBrush" Color="#660C0C14" />
+            <SolidColorBrush x:Key="FlagShadowColorBrush" Color="#660E1317" />
             <StaticResource x:Key="FlagSecureCoreOutlineColorBrush" ResourceKey="BorderNormColorBrush" />
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
