@@ -1,0 +1,23 @@
+name: build
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Test
+        run: dotnet test tests/CindrixVPN.Core.Tests/CindrixVPN.Core.Tests.csproj -c Release
+      - name: Publish
+        run: |
+          dotnet publish src/CindrixVPN.TunnelService -c Release -r win-x64 --self-contained true -o publish
+          dotnet publish src/CindrixVPN.Client -c Release -r win-x64 --self-contained true -o publish
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CindrixVPN-win-x64
+          path: publish

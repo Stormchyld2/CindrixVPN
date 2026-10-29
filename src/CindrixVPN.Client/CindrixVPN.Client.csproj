@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <AssemblyName>CindrixVPN</AssemblyName>
+    <RootNamespace>CindrixVPN.Client</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CindrixVPN.Core\CindrixVPN.Core.csproj" />
+    <ProjectReference Include="..\CindrixVPN.TunnelService\CindrixVPN.TunnelService.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\native\x64\*.dll" Link="%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\config\servers.json" Link="servers.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>
