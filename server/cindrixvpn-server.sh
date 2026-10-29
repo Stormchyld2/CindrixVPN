@@ -6,13 +6,13 @@
 #   sudo ./cindrixvpn-server.sh add-peer <name> <pubkey>   authorize a device-generated key
 #   sudo ./cindrixvpn-server.sh list                       show connected peers
 #
-# Optional environment: WG_PORT (default 51820), ENDPOINT (public IP or DNS name), DNS (default 1.1.1.1)
+# Optional environment: WG_PORT (default 51820), WG_NET (default 10.66.66), ENDPOINT (public IP or DNS name), DNS (default 1.1.1.1)
 set -euo pipefail
 
 WG_IF=wg0
 WG_DIR=/etc/wireguard
 WG_PORT="${WG_PORT:-51820}"
-WG_NET=10.8.0
+WG_NET="${WG_NET:-10.66.66}"
 DNS="${DNS:-1.1.1.1}"
 
 need_root() { [ "$(id -u)" -eq 0 ] || { echo "Run this with sudo." >&2; exit 1; }; }
