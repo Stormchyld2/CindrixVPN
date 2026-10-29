@@ -6,7 +6,7 @@ No account, no backend: the device key is generated locally and the server list 
 - Run `CindrixVPN.exe` (asks for administrator rights to manage the tunnel service).
 - Copy the device public key shown in the app and authorize it on the server:
   `sudo ./cindrixvpn-server.sh add-peer <name> <public-key>`
-- Server setup: see `server/README.md` in the main branch.
+- Server setup: see `server/README.md`.
 
 Build: GitHub Actions (`build` workflow) produces the `CindrixVPN-win-x64` artifact.
 
