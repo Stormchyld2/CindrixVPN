@@ -11,20 +11,11 @@
 #   sudo ./cindrixvpn-server.sh unforward-port <name> <port>
 #   sudo ./cindrixvpn-server.sh list-forwards
 #
-# Tor (a second tunnel, wg1, whose traffic is sent through Tor; needs UDP 51821 open in Oracle):
-#   sudo ./cindrixvpn-server.sh setup-tor
-#   sudo ./cindrixvpn-server.sh add-tor-client <name>      make a ready-to-import <name>.conf
-#
 # Optional environment: WG_PORT (default 51820), WG_NET (default 10.66.66), ENDPOINT (public IP or DNS name), DNS (default 1.1.1.1)
 set -euo pipefail
 
 WG_IF="${WG_IF:-wg0}"
 WG_DIR="${WG_DIR:-/etc/wireguard}"
-TOR_IF=wg1
-TOR_NET=10.77.77
-TOR_WG_PORT=51821
-TOR_TRANS_PORT=9040
-TOR_DNS_PORT=5353
 WG_PORT="${WG_PORT:-51820}"
 WG_NET="${WG_NET:-10.66.66}"
 DNS="${DNS:-1.1.1.1}"
@@ -153,7 +144,7 @@ check_forward_args() { # name port -> sets FWD_IP
   local name=${1:?name required} port=${2:?port required}
   [[ "$port" =~ ^[0-9]+$ ]] && [ "$port" -ge 1024 ] && [ "$port" -le 65535 ] \
     || { echo "Port must be a number from 1024 to 65535." >&2; exit 1; }
-  case "$port" in 51820|51821|9040|5353) echo "Port $port is used by CindrixVPN itself." >&2; exit 1 ;; esac
+  case "$port" in 51820) echo "Port $port is used by CindrixVPN itself." >&2; exit 1 ;; esac
   FWD_IP=$(peer_ip "$name")
   [ -n "$FWD_IP" ] || { echo "No device named '$name' on $WG_IF. Run: $0 list" >&2; exit 1; }
 }
@@ -197,74 +188,6 @@ cmd_unforward_port() {
 
 cmd_list_forwards() { need_root; iptables -t nat -S PREROUTING | grep -- "-j DNAT" || echo "No forwarded ports."; }
 
-# ---------- Tor: second tunnel whose traffic goes through Tor ----------
-
-cmd_setup_tor() {
-  need_root
-  [ -f "$WG_DIR/server.key" ] || { echo "Run '$0 setup' first." >&2; exit 1; }
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get install -y tor
-
-  umask 077
-  if [ ! -f "$WG_DIR/$TOR_IF.conf" ]; then
-    cat > "$WG_DIR/$TOR_IF.conf" <<EOF
-[Interface]
-Address = ${TOR_NET}.1/24
-ListenPort = ${TOR_WG_PORT}
-PrivateKey = $(cat "$WG_DIR/server.key")
-PostUp = iptables -t nat -A PREROUTING -i %i -p tcp --syn -j REDIRECT --to-ports ${TOR_TRANS_PORT}; iptables -t nat -A PREROUTING -i %i -p udp --dport 53 -j REDIRECT --to-ports ${TOR_DNS_PORT}; iptables -I FORWARD 1 -i %i -j DROP; iptables -I INPUT 1 -i %i -j DROP; iptables -I INPUT 1 -i %i -p tcp --dport ${TOR_TRANS_PORT} -j ACCEPT; iptables -I INPUT 1 -i %i -p udp --dport ${TOR_DNS_PORT} -j ACCEPT
-PostDown = iptables -t nat -D PREROUTING -i %i -p tcp --syn -j REDIRECT --to-ports ${TOR_TRANS_PORT}; iptables -t nat -D PREROUTING -i %i -p udp --dport 53 -j REDIRECT --to-ports ${TOR_DNS_PORT}; iptables -D FORWARD -i %i -j DROP; iptables -D INPUT -i %i -j DROP; iptables -D INPUT -i %i -p tcp --dport ${TOR_TRANS_PORT} -j ACCEPT; iptables -D INPUT -i %i -p udp --dport ${TOR_DNS_PORT} -j ACCEPT
-EOF
-  fi
-
-  # Tor listens only on the tunnel address, as a client (never a relay or exit).
-  if ! grep -q "CindrixVPN Tor" /etc/tor/torrc; then
-    cat >> /etc/tor/torrc <<EOF
-
-## CindrixVPN Tor transparent proxy (client only)
-VirtualAddrNetworkIPv4 10.192.0.0/10
-AutomapHostsOnResolve 1
-TransPort ${TOR_NET}.1:${TOR_TRANS_PORT} IsolateClientAddr IsolateClientProtocol IsolateDestAddr IsolateDestPort
-DNSPort ${TOR_NET}.1:${TOR_DNS_PORT}
-SocksPort 0
-ExitPolicy reject *:*
-EOF
-  fi
-
-  # The tunnel address must exist before Tor starts.
-  mkdir -p /etc/systemd/system/tor@default.service.d
-  cat > /etc/systemd/system/tor@default.service.d/cindrixvpn.conf <<EOF
-[Unit]
-After=wg-quick@${TOR_IF}.service
-Requires=wg-quick@${TOR_IF}.service
-EOF
-  systemctl daemon-reload
-
-  iptables -C INPUT -p udp --dport "$TOR_WG_PORT" -j ACCEPT 2>/dev/null \
-    || iptables -I INPUT 1 -p udp --dport "$TOR_WG_PORT" -j ACCEPT
-  netfilter-persistent save >/dev/null
-
-  systemctl enable --now "wg-quick@$TOR_IF"
-  systemctl enable tor@default
-  systemctl restart tor@default
-  sleep 3
-
-  echo
-  if ss -ltn | grep -q "${TOR_NET}.1:${TOR_TRANS_PORT}"; then
-    echo "Tor is listening on ${TOR_NET}.1:${TOR_TRANS_PORT}."
-  else
-    echo "WARNING: Tor is not listening yet. Check: sudo journalctl -u tor@default -n 30" >&2
-  fi
-  echo "Still to do in the Oracle console: allow inbound UDP $TOR_WG_PORT (same steps as 51820)."
-  echo "Then make a device config with: sudo $0 add-tor-client <name>"
-}
-
-cmd_add_tor_client() {
-  need_root
-  [ -f "$WG_DIR/$TOR_IF.conf" ] || { echo "Run '$0 setup-tor' first." >&2; exit 1; }
-  ( WG_IF=$TOR_IF; WG_NET=$TOR_NET; WG_PORT=$TOR_WG_PORT; DNS="${TOR_NET}.1"; cmd_add_client "$@" )
-}
-
 case "${1:-}" in
   setup)           shift; cmd_setup "$@" ;;
   add-client)      shift; cmd_add_client "$@" ;;
@@ -273,7 +196,5 @@ case "${1:-}" in
   forward-port)    shift; cmd_forward_port "$@" ;;
   unforward-port)  shift; cmd_unforward_port "$@" ;;
   list-forwards)   shift; cmd_list_forwards "$@" ;;
-  setup-tor)       shift; cmd_setup_tor "$@" ;;
-  add-tor-client)  shift; cmd_add_tor_client "$@" ;;
-  *) sed -n '2,18p' "$0"; exit 1 ;;
+  *) sed -n '2,13p' "$0"; exit 1 ;;
 esac

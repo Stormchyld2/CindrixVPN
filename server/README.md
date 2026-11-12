@@ -66,17 +66,3 @@ can go to only one device. Remove it with `unforward-port`, and review with `lis
 
 Heavy or copyrighted torrenting from an Oracle address can get the account warned or suspended,
 which would take the VPN down for everyone.
-
-## Optional: Tor tunnel
-
-A second tunnel (`wg1`, UDP 51821) sends everything through Tor, including `.onion` sites:
-
-```bash
-sudo ./cindrixvpn-server.sh setup-tor          # then open UDP 51821 in Oracle
-sudo ./cindrixvpn-server.sh add-tor-client my-laptop-tor
-```
-
-Use a device's normal config for everyday browsing and its `-tor` config when you want Tor.
-Tor carries only TCP, so UDP traffic (including QUIC and BitTorrent UDP) is dropped on this tunnel.
-Don't torrent over Tor: it is slow, harms the Tor network, and can expose your real address.
-The server runs Tor as a client only, never as a relay or exit.
