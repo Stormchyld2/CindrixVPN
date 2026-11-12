@@ -6,11 +6,6 @@
 #   sudo ./cindrixvpn-server.sh add-peer <name> <pubkey>   authorize a device-generated key
 #   sudo ./cindrixvpn-server.sh list                       show connected peers
 #
-# P2P (port forwarding to one device; also open the port in the Oracle security list):
-#   sudo ./cindrixvpn-server.sh forward-port <name> <port> [tcp|udp|both]
-#   sudo ./cindrixvpn-server.sh unforward-port <name> <port>
-#   sudo ./cindrixvpn-server.sh list-forwards
-#
 # Optional environment: WG_PORT (default 51820), WG_NET (default 10.66.66), ENDPOINT (public IP or DNS name), DNS (default 1.1.1.1)
 set -euo pipefail
 
@@ -132,69 +127,10 @@ EOF
 
 cmd_list() { need_root; wg show "$WG_IF"; }
 
-# ---------- P2P: port forwarding ----------
-
-default_nic() { ip -4 route show default | awk '{print $5; exit}'; }
-
-peer_ip() { # name -> the peer's tunnel address on $WG_IF
-  awk -v n="# $1" '$0 == n { f = 1; next } f && /AllowedIPs/ { sub(/\/32.*/, "", $3); print $3; exit }' "$WG_DIR/$WG_IF.conf"
-}
-
-check_forward_args() { # name port -> sets FWD_IP
-  local name=${1:?name required} port=${2:?port required}
-  [[ "$port" =~ ^[0-9]+$ ]] && [ "$port" -ge 1024 ] && [ "$port" -le 65535 ] \
-    || { echo "Port must be a number from 1024 to 65535." >&2; exit 1; }
-  case "$port" in 51820) echo "Port $port is used by CindrixVPN itself." >&2; exit 1 ;; esac
-  FWD_IP=$(peer_ip "$name")
-  [ -n "$FWD_IP" ] || { echo "No device named '$name' on $WG_IF. Run: $0 list" >&2; exit 1; }
-}
-
-cmd_forward_port() {
-  need_root
-  check_forward_args "$@"
-  local name=$1 port=$2 which="${3:-both}" nic protos proto
-  case "$which" in tcp|udp) protos=$which ;; both) protos="tcp udp" ;; *) echo "Use tcp, udp or both." >&2; exit 1 ;; esac
-  nic=$(default_nic)
-  for proto in $protos; do
-    if iptables -t nat -S PREROUTING | grep -Eq -- "-p $proto .*--dport $port -j DNAT"; then
-      echo "$proto port $port is already forwarded. See: $0 list-forwards" >&2; exit 1
-    fi
-  done
-  for proto in $protos; do
-    iptables -t nat -A PREROUTING -i "$nic" -p "$proto" --dport "$port" -j DNAT --to-destination "$FWD_IP:$port"
-  done
-  netfilter-persistent save >/dev/null
-  echo "Forwarded $protos port $port to $name ($FWD_IP)."
-  echo "Still to do:"
-  echo "  1. Oracle console: add ingress rules (source 0.0.0.0/0) for the same port and protocol(s)."
-  echo "  2. On the device: set the torrent client's listening port to $port and allow it in the device firewall."
-}
-
-cmd_unforward_port() {
-  need_root
-  check_forward_args "$@"
-  local port=$2 nic proto removed=0
-  nic=$(default_nic)
-  for proto in tcp udp; do
-    if iptables -t nat -C PREROUTING -i "$nic" -p "$proto" --dport "$port" -j DNAT --to-destination "$FWD_IP:$port" 2>/dev/null; then
-      iptables -t nat -D PREROUTING -i "$nic" -p "$proto" --dport "$port" -j DNAT --to-destination "$FWD_IP:$port"
-      removed=1
-    fi
-  done
-  [ "$removed" -eq 1 ] || { echo "No forward of port $port to $1 was found." >&2; exit 1; }
-  netfilter-persistent save >/dev/null
-  echo "Removed forward of port $port to $1. You can also delete its Oracle ingress rules."
-}
-
-cmd_list_forwards() { need_root; iptables -t nat -S PREROUTING | grep -- "-j DNAT" || echo "No forwarded ports."; }
-
 case "${1:-}" in
   setup)           shift; cmd_setup "$@" ;;
   add-client)      shift; cmd_add_client "$@" ;;
   add-peer)        shift; cmd_add_peer "$@" ;;
   list)            shift; cmd_list "$@" ;;
-  forward-port)    shift; cmd_forward_port "$@" ;;
-  unforward-port)  shift; cmd_unforward_port "$@" ;;
-  list-forwards)   shift; cmd_list_forwards "$@" ;;
-  *) sed -n '2,13p' "$0"; exit 1 ;;
+  *) sed -n '2,9p' "$0"; exit 1 ;;
 esac

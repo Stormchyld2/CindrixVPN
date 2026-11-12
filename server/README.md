@@ -51,18 +51,3 @@ and enter the address, endpoint and server public key it prints into the app.
 - IPv6 is not routed by this server. The client config sends IPv6 into the tunnel, where it is
   dropped, so it can't leak around the VPN.
 - If the VM's public IP changes, edit `/etc/wireguard/endpoint` and re-issue configs.
-
-## Optional: P2P (port forwarding)
-
-Forward one port to one device so a torrent client can accept incoming connections:
-
-```bash
-sudo ./cindrixvpn-server.sh forward-port my-laptop 51413
-```
-
-Then (1) add Oracle ingress rules for that port (source `0.0.0.0/0`, TCP and UDP), and (2) set the
-torrent client's listening port to the same number and allow it in the device firewall. Each port
-can go to only one device. Remove it with `unforward-port`, and review with `list-forwards`.
-
-Heavy or copyrighted torrenting from an Oracle address can get the account warned or suspended,
-which would take the VPN down for everyone.
