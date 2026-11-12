@@ -3,9 +3,9 @@
     {
       "name": "CindrixOps Exit (Ashburn)",
       "country": "US",
-      "endpoint": "157.151.152.154",
+      "endpoint": "129.80.213.181",
       "port": 51820,
-      "serverPublicKey": "ji6C3LPeC00BIhtSBxU+kYpr5RdfrZs4AKk5guNnEGw=",
+      "serverPublicKey": "UjEw/MIyYZFFvUM5qKNP9NN8tSj7QMQYm3HKtktnUgA=",
       "clientAddress": "10.66.66.2/32",
       "dns": ["1.1.1.1"]
     }
