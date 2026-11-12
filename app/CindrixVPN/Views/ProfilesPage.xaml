@@ -1,0 +1,56 @@
+<UserControl x:Class="CindrixVPN.Views.ProfilesPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="22,18,22,18">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300"/>
+            <ColumnDefinition Width="16"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Border Style="{StaticResource Panel}" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Profiles" Style="{StaticResource Heading}" Margin="0,0,0,4"/>
+                <ListBox Grid.Row="1" ItemsSource="{Binding Profiles}" SelectedItem="{Binding SelectedProfile, Mode=TwoWay}"
+                         Margin="0,10,0,10" DisplayMemberPath="Name" FontSize="16"/>
+                <StackPanel Grid.Row="2">
+                    <Button Content="Add profile (import .conf)…" Style="{StaticResource GhostButton}" Click="Add_Click" Margin="0,0,0,8"/>
+                    <Button Content="Remove selected" Style="{StaticResource GhostButton}" Click="Remove_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <Border Grid.Column="2" Style="{StaticResource Panel}" Padding="22">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Each family member can have their own profile with their own settings. Make a config for each device on the server, then import it here."
+                           Style="{StaticResource Muted}" TextWrapping="Wrap" Margin="0,0,0,16"/>
+                <StackPanel Grid.Row="1" DataContext="{Binding SelectedProfile}">
+                    <TextBlock Text="Name" Style="{StaticResource Muted}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding Name, UpdateSourceTrigger=LostFocus}" FontSize="16" Margin="0,0,0,18"/>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <ToggleButton Style="{StaticResource Switch}" IsChecked="{Binding KillSwitch, Mode=TwoWay}"/>
+                        <TextBlock Text="Kill switch" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="15"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                        <ToggleButton Style="{StaticResource Switch}" IsChecked="{Binding NetShield, Mode=TwoWay}"/>
+                        <TextBlock Text="NetShield (needs the server's NetShield service)" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="15"/>
+                    </StackPanel>
+
+                    <TextBlock Text="Split tunneling — addresses that bypass the VPN (one per line)" Style="{StaticResource Muted}" Margin="0,0,0,4"/>
+                    <TextBox Text="{Binding ExcludesText, UpdateSourceTrigger=LostFocus}" AcceptsReturn="True" Height="120"
+                             TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Consolas"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

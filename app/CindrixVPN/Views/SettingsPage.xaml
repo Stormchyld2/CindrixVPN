@@ -1,0 +1,24 @@
+<UserControl x:Class="CindrixVPN.Views.SettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="22,18,22,18">
+        <Border Style="{StaticResource Panel}" Padding="22">
+            <StackPanel>
+                <TextBlock Text="Settings" Style="{StaticResource Heading}" Margin="0,0,0,16"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <ToggleButton Style="{StaticResource Switch}" IsChecked="{Binding AutoConnect, Mode=TwoWay}"/>
+                    <TextBlock Text="Connect automatically when the app starts" Margin="12,0,0,0" VerticalAlignment="Center" FontSize="15"/>
+                </StackPanel>
+                <TextBlock Text="Uses the profile selected on the Profiles page." Style="{StaticResource Muted}" Margin="0,0,0,20"/>
+
+                <TextBlock x:Name="WgStatus" FontSize="15" Margin="0,0,0,8" TextWrapping="Wrap"/>
+                <Button Content="Get WireGuard for Windows" Style="{StaticResource GhostButton}" HorizontalAlignment="Left"
+                        Click="Get_Click" Margin="0,0,0,20"/>
+
+                <TextBlock Text="If something gets stuck, this removes every Cindrix tunnel from Windows." Style="{StaticResource Muted}" Margin="0,0,0,6"/>
+                <Button Content="Reset all tunnels" Style="{StaticResource GhostButton}" HorizontalAlignment="Left" Click="Reset_Click"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>
