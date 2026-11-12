@@ -127,10 +127,72 @@ EOF
 
 cmd_list() { need_root; wg show "$WG_IF"; }
 
+cmd_setup_netshield() {
+  need_root
+  local gw="${WG_GATEWAY:-10.66.66.1}" arch ag_dir=/opt/AdGuardHome pass
+  case "$(uname -m)" in x86_64) arch=amd64 ;; aarch64) arch=arm64 ;; *) echo "Unsupported CPU"; exit 1 ;; esac
+  apt-get install -y curl python3 >/dev/null
+  if [ ! -x "$ag_dir/AdGuardHome" ]; then
+    curl -fsSL "https://static.adguard.com/adguardhome/release/AdGuardHome_linux_${arch}.tar.gz" | tar -xz -C /opt
+  fi
+  # Let AdGuard start only after the VPN interface (and its 10.66.66.1 address) exists.
+  mkdir -p /etc/systemd/system/AdGuardHome.service.d
+  printf '[Unit]\nAfter=wg-quick@%s.service\nRequires=wg-quick@%s.service\n' "$WG_IF" "$WG_IF" \
+    > /etc/systemd/system/AdGuardHome.service.d/wg.conf
+  (cd "$ag_dir" && ./AdGuardHome -s install) || true
+  systemctl daemon-reload
+  systemctl start AdGuardHome
+  sleep 4
+  pass=$(head -c 12 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 14)
+  # First-run wizard API: bind the filter and its admin page to the VPN address only.
+  curl -fsS -X POST http://127.0.0.1:3000/control/install/configure -H 'Content-Type: application/json' \
+    -d "{\"web\":{\"ip\":\"$gw\",\"port\":3000},\"dns\":{\"ip\":\"$gw\",\"port\":53},\"username\":\"admin\",\"password\":\"$pass\"}" \
+    || echo "(AdGuard may already be configured; skipping the wizard)"
+  systemctl restart AdGuardHome
+
+  # Tiny stats endpoint for the app's Server Load bar, reachable only inside the tunnel.
+  cat > /usr/local/bin/cindrix-stats.py <<STATS
+#!/usr/bin/env python3
+import json, os
+from http.server import BaseHTTPRequestHandler, HTTPServer
+class H(BaseHTTPRequestHandler):
+    def do_GET(self):
+        load = min(100, int(os.getloadavg()[0] / (os.cpu_count() or 1) * 100))
+        body = json.dumps({"load": load, "blocked": 0, "queries": 0}).encode()
+        self.send_response(200); self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body))); self.end_headers(); self.wfile.write(body)
+    def log_message(self, *a): pass
+HTTPServer(("$gw", 8088), H).serve_forever()
+STATS
+  chmod +x /usr/local/bin/cindrix-stats.py
+  cat > /etc/systemd/system/cindrix-stats.service <<UNIT
+[Unit]
+After=wg-quick@$WG_IF.service
+Requires=wg-quick@$WG_IF.service
+[Service]
+ExecStart=/usr/local/bin/cindrix-stats.py
+Restart=always
+[Install]
+WantedBy=multi-user.target
+UNIT
+  systemctl daemon-reload
+  systemctl enable --now cindrix-stats
+
+  # Oracle's INPUT chain rejects unknown traffic: allow DNS and stats from VPN clients only.
+  for r in "-p udp --dport 53" "-p tcp --dport 53" "-p tcp --dport 8088" "-p tcp --dport 3000"; do
+    iptables -C INPUT -i "$WG_IF" $r -j ACCEPT 2>/dev/null || iptables -I INPUT 1 -i "$WG_IF" $r -j ACCEPT
+  done
+  command -v netfilter-persistent >/dev/null && netfilter-persistent save
+  echo
+  echo "NetShield is on. Filter admin page (open while connected to the VPN): http://$gw:3000"
+  echo "Login: admin / $pass   <- write this down; it is shown only once."
+}
+
 case "${1:-}" in
   setup)           shift; cmd_setup "$@" ;;
   add-client)      shift; cmd_add_client "$@" ;;
   add-peer)        shift; cmd_add_peer "$@" ;;
   list)            shift; cmd_list "$@" ;;
+  setup-netshield) shift; cmd_setup_netshield "$@" ;;
   *) sed -n '2,9p' "$0"; exit 1 ;;
 esac
