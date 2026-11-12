@@ -51,3 +51,32 @@ and enter the address, endpoint and server public key it prints into the app.
 - IPv6 is not routed by this server. The client config sends IPv6 into the tunnel, where it is
   dropped, so it can't leak around the VPN.
 - If the VM's public IP changes, edit `/etc/wireguard/endpoint` and re-issue configs.
+
+## Optional: P2P (port forwarding)
+
+Forward one port to one device so a torrent client can accept incoming connections:
+
+```bash
+sudo ./cindrixvpn-server.sh forward-port my-laptop 51413
+```
+
+Then (1) add Oracle ingress rules for that port (source `0.0.0.0/0`, TCP and UDP), and (2) set the
+torrent client's listening port to the same number and allow it in the device firewall. Each port
+can go to only one device. Remove it with `unforward-port`, and review with `list-forwards`.
+
+Heavy or copyrighted torrenting from an Oracle address can get the account warned or suspended,
+which would take the VPN down for everyone.
+
+## Optional: Tor tunnel
+
+A second tunnel (`wg1`, UDP 51821) sends everything through Tor, including `.onion` sites:
+
+```bash
+sudo ./cindrixvpn-server.sh setup-tor          # then open UDP 51821 in Oracle
+sudo ./cindrixvpn-server.sh add-tor-client my-laptop-tor
+```
+
+Use a device's normal config for everyday browsing and its `-tor` config when you want Tor.
+Tor carries only TCP, so UDP traffic (including QUIC and BitTorrent UDP) is dropped on this tunnel.
+Don't torrent over Tor: it is slow, harms the Tor network, and can expose your real address.
+The server runs Tor as a client only, never as a relay or exit.
